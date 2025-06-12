@@ -144,27 +144,6 @@ public class ProductService {
 		return null;
 	}
 
-	/*public List<ProductDTO> getAllProductsUsingRedisTemplate() {
-		String key = "product::all";
-
-		List<ProductDTO> cachedList = (List<ProductDTO>) redisTemplate.opsForValue().get(key);
-		if (cachedList != null) {
-			System.out.println("Fetched all products from Redis");
-			return cachedList;
-		}
-
-		System.out.println("Cache MISS! Fetching from DB...");
-		delay();
-		List<ProductDTO> productDtoList = productRepository.findAll()
-				.stream()
-				.map(this::toDto)
-				.collect(Collectors.toList());
-
-		redisTemplate.opsForValue().set(key, productDtoList);
-		System.out.println("Cached all products in Redis");
-		return productDtoList;
-	}*/
-
 	public List<ProductDTO> getAllProductsUsingRedisTemplate() {
 		String key = "product::all";
 
