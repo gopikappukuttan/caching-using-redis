@@ -50,6 +50,17 @@ services:
       - app-network
     command: [ "redis-server", "--save", "", "--appendonly", "no" ]
 
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.18.1
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+    networks:
+      - app-network
+
 networks:
   app-network:
     driver: bridge

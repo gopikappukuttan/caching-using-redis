@@ -9,6 +9,7 @@ services:
       - kafka
       - postgres
       - redis
+      - elasticsearch
     networks:
       - app-network
     environment:
@@ -18,4 +19,5 @@ services:
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PORT: 6379
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_ELASTICSEARCH_URIS: http://elasticsearch:9200
       SPRING_PROFILES_ACTIVE: docker

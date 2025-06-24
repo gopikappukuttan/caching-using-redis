@@ -11,3 +11,14 @@ spring:
 
   kafka:
     bootstrap-servers: kafka:9092
+
+  elasticsearch:
+    uris: ${SPRING_ELASTICSEARCH_URIS:http://localhost:9200}
+    connection-timeout: 10s
+    socket-timeout: 30s
+
+
+  logging:
+    level:
+      root: DEBUG
+

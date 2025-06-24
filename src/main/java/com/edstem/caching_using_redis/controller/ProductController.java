@@ -1,7 +1,9 @@
 package com.edstem.caching_using_redis.controller;
 
 import com.edstem.caching_using_redis.contract.ProductDTO;
+import com.edstem.caching_using_redis.model.ProductDocument;
 import com.edstem.caching_using_redis.service.ProductService;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -63,4 +65,15 @@ public class ProductController {
 	public ResponseEntity<List<ProductDTO>> getAllManually() {
 		return ResponseEntity.ok(productService.getAllProductsUsingRedisTemplate());
 	}
+
+	@GetMapping("/category/{category}")
+	public Page<ProductDocument> searchByCategory(
+			@PathVariable String category,
+			@RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "5") int size,
+			@RequestParam(defaultValue = "name") String sortBy
+	) {
+		return productService.searchByCategory(category, page, size, sortBy);
+	}
+
 }

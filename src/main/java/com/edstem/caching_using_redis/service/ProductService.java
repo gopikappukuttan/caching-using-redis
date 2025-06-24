@@ -1,8 +1,11 @@
 package com.edstem.caching_using_redis.service;
 
 import com.edstem.caching_using_redis.contract.ProductDTO;
+import com.edstem.caching_using_redis.mapper.ProductMapper;
 import com.edstem.caching_using_redis.model.Product;
+import com.edstem.caching_using_redis.model.ProductDocument;
 import com.edstem.caching_using_redis.repository.ProductRepository;
+import com.edstem.caching_using_redis.repository.ProductSearchRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +15,10 @@ import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -29,11 +36,13 @@ public class ProductService {
 	private ObjectMapper objectMapper;
 
 	private final ProductRepository productRepository;
+	private final ProductSearchRepository productSearchRepository;
 	private final KafkaProducerService kafkaProducer;
 	private final RedisTemplate<String, Object> redisTemplate;
 
-	public ProductService(ProductRepository productRepository, KafkaProducerService kafkaProducer, RedisTemplate<String, Object> redisTemplate) {
+	public ProductService(ProductRepository productRepository, ProductSearchRepository productSearchRepository, KafkaProducerService kafkaProducer, RedisTemplate<String, Object> redisTemplate) {
 		this.productRepository = productRepository;
+		this.productSearchRepository = productSearchRepository;
 		this.kafkaProducer = kafkaProducer;
 		this.redisTemplate = redisTemplate;
 	}
@@ -63,12 +72,30 @@ public class ProductService {
 
 	public ProductDTO saveProduct(ProductDTO dto) {
 		delay();
-		Product product = toEntity(dto);
+
+		Product product = ProductMapper.toEntity(dto);
+
 		Product saved = productRepository.save(product);
+
 		kafkaProducer.sendMessage("Product created: " + saved.getName());
+
 		redisTemplate.delete("product::all");
-		return toDto(saved);
+
+		ProductDocument productDocument = ProductMapper.toDocument(saved);
+		System.out.println("Saving to Elasticsearch: " + productDocument);
+
+		try {
+			productSearchRepository.save(productDocument);
+			System.out.println("Saved to Elasticsearch");
+		} catch (Exception e) {
+			System.err.println("Failed to save to Elasticsearch: " + e.getMessage());
+			e.printStackTrace();
+		}
+
+		return ProductMapper.toDTO(saved);
 	}
+
+
 
 	@CachePut(value = PRODUCT_CACHE, key = "#id")
 	@CacheEvict(value = PRODUCT_CACHE, key = "'all'")
@@ -174,4 +201,8 @@ public class ProductService {
 		return productDtoList;
 	}
 
+	public Page<ProductDocument> searchByCategory(String category, int page, int size, String sortBy) {
+		Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy).ascending());
+		return productSearchRepository.findByCategory(category, pageable);
+	}
 }
