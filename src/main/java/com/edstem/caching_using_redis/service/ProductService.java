@@ -96,7 +96,6 @@ public class ProductService {
 	}
 
 
-
 	@CachePut(value = PRODUCT_CACHE, key = "#id")
 	@CacheEvict(value = PRODUCT_CACHE, key = "'all'")
 	public ProductDTO updateProduct(Long id, ProductDTO dto) {
@@ -149,7 +148,7 @@ public class ProductService {
 		}
 	}
 
-	// RedisTemplate-based caching with DTO
+	// RedisTemplate-based caching
 
 	public ProductDTO getProductByIdUsingRedisTemplate(Long id) {
 		String key = "product::" + id;
@@ -173,7 +172,6 @@ public class ProductService {
 
 	public List<ProductDTO> getAllProductsUsingRedisTemplate() {
 		String key = "product::all";
-
 		Object cached = redisTemplate.opsForValue().get(key);
 		if (cached != null) {
 			System.out.println("Fetched all products from Redis");
@@ -181,7 +179,8 @@ public class ProductService {
 
 				List<ProductDTO> products = objectMapper.convertValue(
 						cached,
-						new TypeReference<List<ProductDTO>>() {}
+						new TypeReference<List<ProductDTO>>() {
+						}
 				);
 				return products;
 			} catch (Exception e) {
